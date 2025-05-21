@@ -203,12 +203,12 @@ class LearnedSecondaryIndex {
     using Vector = decltype(_perm_vector);
 
     size_t _index;
-    const Vector &_perm_vector_ref;
+    const Vector &_perm_vector;
 
     PermIter(size_t index, decltype(_perm_vector) &perm_vector)
-        : _index(index), _perm_vector_ref(perm_vector) {}
+        : _index(index), _perm_vector(perm_vector) {}
 
-    typename Vector::value value() const { return _perm_vector_ref[_index]; }
+    typename Vector::value value() const { return _perm_vector[_index]; }
 
    public:
     using iterator_category = typename BaseIter::iterator_category;
@@ -218,7 +218,7 @@ class LearnedSecondaryIndex {
     using reference = value_type &;
 
     /// Obtain current offset into original data [begin, end)
-    value_type operator*() const { return _perm_vector_ref[_index].index; }
+    value_type operator*() const { return _perm_vector[_index].index; }
 
     // Prefix increment
     PermIter &operator++() {
@@ -242,12 +242,12 @@ class LearnedSecondaryIndex {
 
     template <class I>
     PermIter operator+(const I &other) const {
-      return PermIter(_index + other, _perm_vector_ref);
+      return PermIter(_index + other, _perm_vector);
     }
 
     template <class I>
     PermIter operator-(const I &other) const {
-      return PermIter(_index - other, _perm_vector_ref);
+      return PermIter(_index - other, _perm_vector);
     }
 
     friend difference_type operator-(const PermIter &a, const PermIter &b) {
@@ -263,11 +263,11 @@ class LearnedSecondaryIndex {
     }
 
     friend bool operator==(const PermIter &a, const PermIter &b) {
-      return a._index == b._index && a._perm_vector_ref == b._perm_vector_ref;
+      return a._index == b._index && a._perm_vector == b._perm_vector;
     };
 
     friend bool operator!=(const PermIter &a, const PermIter &b) {
-      return a._index != b._index || a._perm_vector_ref != b._perm_vector_ref;
+      return a._index != b._index || a._perm_vector != b._perm_vector;
     };
 
     friend LearnedSecondaryIndex<Key, Model, fingerprint_size,
