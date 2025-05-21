@@ -206,7 +206,7 @@ class LearnedSecondaryIndex {
     const Vector &_perm_vector_ref;
 
     PermIter(size_t index, decltype(_perm_vector) &perm_vector)
-        : _index(index), _perm_vector(perm_vector) {}
+        : _index(index), _perm_vector_ref(perm_vector) {}
 
     typename Vector::value value() const { return _perm_vector_ref[_index]; }
 
