@@ -116,15 +116,27 @@ class LearnedSecondaryIndex {
     }
 
     friend bool operator==(const PairIter &a, const PairIter &b) {
-      return a._iter == b._iter;
+      // Use the new member name for comparison
+      return a._iter == b._iter && a._parent_perm_vector == b._parent_perm_vector;
     };
 
     friend bool operator!=(const PairIter &a, const PairIter &b) {
-      return a._iter != b._iter;
+      // Use the new member name for comparison
+      return a._iter != b._iter || a._parent_perm_vector != b._parent_perm_vector;
     };
 
     friend LearnedSecondaryIndex<Key, Model, fingerprint_size,
                                  force_linear_search>;
+
+    // Renamed member to avoid shadowing
+    const Vector &_parent_perm_vector;
+
+    // Constructor updated to initialize the new member name
+    PermIter(size_t index, decltype(_perm_vector) &perm_vector)
+        : _index(index), _parent_perm_vector(perm_vector) {}
+
+    // Method updated to use the new member name
+    typename Vector::value value() const { return _parent_perm_vector[_index]; }
   };
 
  public:
@@ -203,12 +215,15 @@ class LearnedSecondaryIndex {
     using Vector = decltype(_perm_vector);
 
     size_t _index;
-    const Vector &_perm_vector;
+    // Renamed member to avoid shadowing
+    const Vector &_parent_perm_vector; // Changed from _perm_vector
 
+    // Constructor updated to initialize the new member name
     PermIter(size_t index, decltype(_perm_vector) &perm_vector)
-        : _index(index), _perm_vector(perm_vector) {}
+        : _index(index), _parent_perm_vector(perm_vector) {} // Changed _perm_vector to _parent_perm_vector
 
-    typename Vector::value value() const { return _perm_vector[_index]; }
+    // Method updated to use the new member name
+    typename Vector::value value() const { return _parent_perm_vector[_index]; } // Changed _perm_vector to _parent_perm_vector
 
    public:
     using iterator_category = typename BaseIter::iterator_category;
@@ -218,7 +233,8 @@ class LearnedSecondaryIndex {
     using reference = value_type &;
 
     /// Obtain current offset into original data [begin, end)
-    value_type operator*() const { return _perm_vector[_index].index; }
+    // This still uses the *outer* class's _perm_vector as intended, via the _parent_perm_vector reference
+    value_type operator*() const { return _parent_perm_vector[_index].index; }
 
     // Prefix increment
     PermIter &operator++() {
@@ -242,12 +258,14 @@ class LearnedSecondaryIndex {
 
     template <class I>
     PermIter operator+(const I &other) const {
-      return PermIter(_index + other, _perm_vector);
+      // Pass _parent_perm_vector instead of _perm_vector
+      return PermIter(_index + other, const_cast<Vector&>(_parent_perm_vector));
     }
 
     template <class I>
     PermIter operator-(const I &other) const {
-      return PermIter(_index - other, _perm_vector);
+      // Pass _parent_perm_vector instead of _perm_vector
+      return PermIter(_index - other, const_cast<Vector&>(_parent_perm_vector));
     }
 
     friend difference_type operator-(const PermIter &a, const PermIter &b) {
@@ -263,11 +281,13 @@ class LearnedSecondaryIndex {
     }
 
     friend bool operator==(const PermIter &a, const PermIter &b) {
-      return a._index == b._index && a._perm_vector == b._perm_vector;
+      // Comparison now uses the correctly named member
+      return a._index == b._index && a._parent_perm_vector == b._parent_perm_vector;
     };
 
     friend bool operator!=(const PermIter &a, const PermIter &b) {
-      return a._index != b._index || a._perm_vector != b._perm_vector;
+      // Comparison now uses the correctly named member
+      return a._index != b._index || a._parent_perm_vector != b._parent_perm_vector;
     };
 
     friend LearnedSecondaryIndex<Key, Model, fingerprint_size,
@@ -328,6 +348,7 @@ class LearnedSecondaryIndex {
     const auto stop = this->begin() + stop_i;
 
     if constexpr (force_linear_search || fingerprint_size > 0) {
+      // Pass the _perm_vector reference to the iterator
       PermIter ind(start_i, _perm_vector);
 
       // linear search algorithm
@@ -375,6 +396,7 @@ class LearnedSecondaryIndex {
         }
       }
 
+      // Pass the _perm_vector reference to the iterator
       PermIter ind(start_i, _perm_vector);
 
       if constexpr (lowerbound) {
